@@ -1,2 +1,9 @@
-# IP-Adapter (coming soon)
-The image prompt adapter is designed to enable a pretrained text-to-image diffusion model to generate images with image prompt. 
+ # IP-Adapter: Text Compatible Image Prompt Adapter for Text-to-Image Diffusion Models
+
+<div align="center">
+
+[**Project Page**](https://ip-adapter.github.io) **|** [**Paper (ArXiv)**](https://arxiv.org/abs/2308.06721)
+</div>
+
+---
+
