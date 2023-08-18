@@ -5,10 +5,16 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 import PIL.Image
 import torch
+import torch.nn.functional as F
 from diffusers.utils import is_compiled_module
 from diffusers.pipelines.controlnet.multicontrolnet import MultiControlNetModel
 from diffusers.models import ControlNetModel
 from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
+
+
+
+def is_torch2_available():
+    return hasattr(F, "scaled_dot_product_attention")
 
 
 @torch.no_grad()
