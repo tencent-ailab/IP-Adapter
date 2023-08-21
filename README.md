@@ -57,6 +57,10 @@ you can download models from [here](https://huggingface.co/h94/IP-Adapter). To r
 ![multi_prompts](assets/demo/multi_prompts.jpg)
 
 
+**Best Practice**
+- If you only use the image prompt, you can set the `scale=1.0` and `text_prompt=""`(or some generic text prompts, e.g. "best quality", you can also use any negative text prompt). If you lower the `scale`, more diverse images can be generated, but they may not be as consistent with the image prompt.
+- For multimodal prompts, you can adjust the `scale` to get best results. In most cases, setting `scale=0.5` can get good results. For the version of SD 1.5, we recommend using community models to generate good images.
+
 ## Citation
 If you find IP-Adapter useful for your your research and applications, please cite using this BibTeX:
 ```bibtex
