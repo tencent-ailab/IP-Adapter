@@ -24,6 +24,7 @@ image generation.
 ![arch](assets/figs/fig1.png)
 
 ## Release
+- [2023/8/23] 🔥 Add code and models of IP-Adapter with fine-grained features. The demo is [here](ip_adapter-plus_demo.ipynb).
 - [2023/8/18] 🔥 Add code and models for [SDXL 1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0). The demo is [here](ip_adapter_sdxl_demo.ipynb).
 - [2023/8/16] 🔥 We release the code and models.
 
@@ -59,6 +60,11 @@ you can download models from [here](https://huggingface.co/h94/IP-Adapter). To r
 - [![**ip_adapter_multimodal_prompts_demo**](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tencent-ailab/IP-Adapter/blob/main/ip_adapter_multimodal_prompts_demo.ipynb) 
 
 ![multi_prompts](assets/demo/multi_prompts.jpg)
+
+- [**ip_adapter-plus_demo**](ip_adapter-plus_demo.ipynb): the demo of IP-Adapter with fine-grained features.
+
+![ip_adpter_plus_image_variations](assets/demo/ip_adpter_plus_image_variations.jpg )
+![ip_adpter_plus_multi](assets/demo/ip_adpter_plus_multi.jpg )
 
 
 **Best Practice**
