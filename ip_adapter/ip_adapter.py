@@ -11,6 +11,7 @@ if is_torch2_available:
     from .attention_processor import IPAttnProcessor2_0 as IPAttnProcessor, AttnProcessor2_0 as AttnProcessor
 else:
     from .attention_processor import IPAttnProcessor, AttnProcessor
+from .resampler import Resampler
 
 
 class ImageProjModel(torch.nn.Module):
@@ -37,6 +38,7 @@ class IPAdapter:
         self.device = device
         self.image_encoder_path = image_encoder_path
         self.ip_ckpt = ip_ckpt
+        self.num_tokens = num_tokens
         
         self.pipe = sd_pipe.to(self.device)
         self.set_ip_adapter()
@@ -45,13 +47,17 @@ class IPAdapter:
         self.image_encoder = CLIPVisionModelWithProjection.from_pretrained(self.image_encoder_path).to(self.device, dtype=torch.float16)
         self.clip_image_processor = CLIPImageProcessor()
         # image proj model
-        self.image_proj_model = ImageProjModel(
-            cross_attention_dim=self.pipe.unet.config.cross_attention_dim,
-            clip_embeddings_dim=self.image_encoder.config.projection_dim,
-            clip_extra_context_tokens=num_tokens,
-        ).to(self.device, dtype=torch.float16)
+        self.image_proj_model = self.init_proj()
         
         self.load_ip_adapter()
+        
+    def init_proj(self):
+        image_proj_model = ImageProjModel(
+            cross_attention_dim=self.pipe.unet.config.cross_attention_dim,
+            clip_embeddings_dim=self.image_encoder.config.projection_dim,
+            clip_extra_context_tokens=self.num_tokens,
+        ).to(self.device, dtype=torch.float16)
+        return image_proj_model
         
     def set_ip_adapter(self):
         unet = self.pipe.unet
@@ -206,3 +212,32 @@ class IPAdapterXL(IPAdapter):
         ).images
         
         return images
+    
+    
+class IPAdapterPlus(IPAdapter):
+    """IP-Adapter with fine-grained features"""
+
+    def init_proj(self):
+        image_proj_model = Resampler(
+            dim=self.pipe.unet.config.cross_attention_dim,
+            depth=4,
+            dim_head=64,
+            heads=12,
+            num_queries=self.num_tokens,
+            embedding_dim=self.image_encoder.config.hidden_size,
+            output_dim=self.pipe.unet.config.cross_attention_dim,
+            ff_mult=4
+        ).to(self.device, dtype=torch.float16)
+        return image_proj_model
+    
+    @torch.inference_mode()
+    def get_image_embeds(self, pil_image):
+        if isinstance(pil_image, Image.Image):
+            pil_image = [pil_image]
+        clip_image = self.clip_image_processor(images=pil_image, return_tensors="pt").pixel_values
+        clip_image = clip_image.to(self.device, dtype=torch.float16)
+        clip_image_embeds = self.image_encoder(clip_image, output_hidden_states=True).hidden_states[-2]
+        image_prompt_embeds = self.image_proj_model(clip_image_embeds)
+        uncond_clip_image_embeds = self.image_encoder(torch.zeros_like(clip_image), output_hidden_states=True).hidden_states[-2]
+        uncond_image_prompt_embeds = self.image_proj_model(uncond_clip_image_embeds)
+        return image_prompt_embeds, uncond_image_prompt_embeds
