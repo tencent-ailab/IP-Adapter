@@ -24,6 +24,7 @@ image generation.
 ![arch](assets/figs/fig1.png)
 
 ## Release
+- [2023/8/29] 🔥 Release the training code.
 - [2023/8/23] 🔥 Add code and models of IP-Adapter with fine-grained features. The demo is [here](ip_adapter-plus_demo.ipynb).
 - [2023/8/18] 🔥 Add code and models for [SDXL 1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0). The demo is [here](ip_adapter_sdxl_demo.ipynb).
 - [2023/8/16] 🔥 We release the code and models.
@@ -70,6 +71,26 @@ you can download models from [here](https://huggingface.co/h94/IP-Adapter). To r
 **Best Practice**
 - If you only use the image prompt, you can set the `scale=1.0` and `text_prompt=""`(or some generic text prompts, e.g. "best quality", you can also use any negative text prompt). If you lower the `scale`, more diverse images can be generated, but they may not be as consistent with the image prompt.
 - For multimodal prompts, you can adjust the `scale` to get the best results. In most cases, setting `scale=0.5` can get good results. For the version of SD 1.5, we recommend using community models to generate good images.
+
+## How to Train
+For training, you should install [accelerate](https://github.com/huggingface/accelerate) and make your own dataset into a json file.
+
+```
+accelerate launch --num_processes 8 --multi_gpu --mixed_precision "fp16" \
+  tutorial_train.py \
+  --pretrained_model_name_or_path="runwayml/stable-diffusion-v1-5/" \
+  --image_encoder_path="{image_encoder_path}" \
+  --data_json_file="{data.json}" \
+  --data_root_path="{image_path}" \
+  --mixed_precision="fp16" \
+  --resolution=512 \
+  --train_batch_size=8 \
+  --dataloader_num_workers=4 \
+  --learning_rate=1e-04 \
+  --weight_decay=0.01 \
+  --output_dir="{output_dir}" \
+  --save_steps=10000
+```
 
 ## Citation
 If you find IP-Adapter useful for your research and applications, please cite using this BibTeX:
