@@ -37,10 +37,9 @@ class MyDataset(torch.utils.data.Dataset):
         self.t_drop_rate = t_drop_rate
         self.ti_drop_rate = ti_drop_rate
         self.image_root_path = image_root_path
-    
+
         self.data = json.load(open(json_file)) # list of dict: [{"image_file": "1.png", "text": "A dog"}]
-        
-        
+
         self.transform = transforms.Compose([
             transforms.Resize(self.size, interpolation=transforms.InterpolationMode.BILINEAR),
             transforms.CenterCrop(self.size),
@@ -84,8 +83,7 @@ class MyDataset(torch.utils.data.Dataset):
             "clip_image": clip_image,
             "drop_image_embed": drop_image_embed
         }
-        
-    
+
     def __len__(self):
         return len(self.data)
     
@@ -322,7 +320,6 @@ def main():
     
     global_step = 0
     for epoch in range(0, args.num_train_epochs):
-        unet.train()
         begin = time.perf_counter()
         for step, batch in enumerate(train_dataloader):
             load_data_time = time.perf_counter() - begin
