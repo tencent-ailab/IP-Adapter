@@ -65,9 +65,12 @@ you can download models from [here](https://huggingface.co/h94/IP-Adapter). To r
 
 - [**ip_adapter-plus_demo**](ip_adapter-plus_demo.ipynb): the demo of IP-Adapter with fine-grained features.
 
-![ip_adpter_plus_image_variations](assets/demo/ip_adpter_plus_image_variations.jpg )
-![ip_adpter_plus_multi](assets/demo/ip_adpter_plus_multi.jpg )
+![ip_adpter_plus_image_variations](assets/demo/ip_adpter_plus_image_variations.jpg)
+![ip_adpter_plus_multi](assets/demo/ip_adpter_plus_multi.jpg)
 
+- [**ip_adapter-plus-face_demo**](ip_adapter-plus-face_demo.ipynb): generation with face image as prompt.
+
+![ip_adpter_plus_face](assets/demo/sd15_face.jpg)
 
 **Best Practice**
 - If you only use the image prompt, you can set the `scale=1.0` and `text_prompt=""`(or some generic text prompts, e.g. "best quality", you can also use any negative text prompt). If you lower the `scale`, more diverse images can be generated, but they may not be as consistent with the image prompt.
