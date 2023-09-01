@@ -10,16 +10,7 @@
 
 ## Introduction
 
-we present IP-Adapter, an effective and lightweight
-adapter to achieve image prompt capability for the pre-trained
-text-to-image diffusion models. An IP-Adapter
-with only 22M parameters can achieve comparable or even
-better performance to a fine-tuned image prompt model. IP-Adapter
-can be generalized not only to other custom models
-fine-tuned from the same base model, but also to controllable
-generation using existing controllable tools. Moreover, the image prompt
-can also work well with the text prompt to accomplish multimodal
-image generation.
+we present IP-Adapter, an effective and lightweight adapter to achieve image prompt capability for the pre-trained text-to-image diffusion models. An IP-Adapter with only 22M parameters can achieve comparable or even better performance to a fine-tuned image prompt model. IP-Adapter can be generalized not only to other custom models fine-tuned from the same base model, but also to controllable generation using existing controllable tools. Moreover, the image prompt can also work well with the text prompt to accomplish multimodal image generation.
 
 ![arch](assets/figs/fig1.png)
 
@@ -98,7 +89,7 @@ accelerate launch --num_processes 8 --multi_gpu --mixed_precision "fp16" \
 
 ## Disclaimer
 
-This project strives to positively impact the domain of AI-driven image generation. Users are granted the freedom to create images using this tool, but they are expected to comply with local laws and employ the software responsibly. **The developers do not assume any responsibility for potential misuse by users.**
+This project strives to positively impact the domain of AI-driven image generation. Users are granted the freedom to create images using this tool, but they are expected to comply with local laws and utilize it in a responsible manner. **The developers do not assume any responsibility for potential misuse by users.**
 
 ## Citation
 If you find IP-Adapter useful for your research and applications, please cite using this BibTeX:
