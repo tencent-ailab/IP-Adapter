@@ -96,6 +96,10 @@ accelerate launch --num_processes 8 --multi_gpu --mixed_precision "fp16" \
   --save_steps=10000
 ```
 
+## Disclaimer
+
+This project strives to positively impact the domain of AI-driven image generation. Users are granted the freedom to create images using this tool, but they are expected to comply with local laws and employ the software responsibly. **The developers do not assume any responsibility for potential misuse by users.**
+
 ## Citation
 If you find IP-Adapter useful for your research and applications, please cite using this BibTeX:
 ```bibtex
