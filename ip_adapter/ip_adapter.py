@@ -7,10 +7,10 @@ from transformers import CLIPVisionModelWithProjection, CLIPImageProcessor
 from PIL import Image
 
 from .utils import is_torch2_available
-if is_torch2_available():
-    from .attention_processor import IPAttnProcessor2_0 as IPAttnProcessor, AttnProcessor2_0 as AttnProcessor
+if is_torch2_available:
+    from .attention_processor import IPAttnProcessor2_0 as IPAttnProcessor, AttnProcessor2_0 as AttnProcessor, CNAttnProcessor2_0 as CNAttnProcessor
 else:
-    from .attention_processor import IPAttnProcessor, AttnProcessor
+    from .attention_processor import IPAttnProcessor, AttnProcessor, CNAttnProcessor
 from .resampler import Resampler
 
 
@@ -78,6 +78,8 @@ class IPAdapter:
                 attn_procs[name] = IPAttnProcessor(hidden_size=hidden_size, cross_attention_dim=cross_attention_dim,
                 scale=1.0).to(self.device, dtype=torch.float16)
         unet.set_attn_processor(attn_procs)
+        if hasattr(self.pipe, "controlnet"):
+            self.pipe.controlnet.set_attn_processor(CNAttnProcessor())
         
     def load_ip_adapter(self):
         state_dict = torch.load(self.ip_ckpt, map_location="cpu")

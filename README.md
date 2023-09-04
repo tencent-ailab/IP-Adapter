@@ -44,7 +44,7 @@ you can download models from [here](https://huggingface.co/h94/IP-Adapter). To r
 
 ![inpainting](assets/demo/inpainting.jpg)
 
-- [**ip_adapter_controlnet_demo**](ip_adapter_controlnet_demo.ipynb), [**ip_adapter_t2i-adapter**](ip_adapter_t2i-adapter_demo.ipynb): structural generation with image prompt.
+- [**ip_adapter_controlnet_demo**](ip_adapter_controlnet_demo_new.ipynb), [**ip_adapter_t2i-adapter**](ip_adapter_t2i-adapter_demo.ipynb): structural generation with image prompt.
 - [![**ip_adapter_controlnet_demo**](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/tencent-ailab/IP-Adapter/blob/main/ip_adapter_controlnet_demo.ipynb) 
 
 ![structural_cond](assets/demo/structural_cond.jpg)
