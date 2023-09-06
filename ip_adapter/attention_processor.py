@@ -440,6 +440,9 @@ class CNAttnProcessor:
             end_pos = encoder_hidden_states.shape[1] - self.num_tokens
             encoder_hidden_states = encoder_hidden_states[:, :end_pos] # only use text
             encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
+        else: # get back text
+            end_pos = encoder_hidden_states.shape[1] - self.num_tokens
+            encoder_hidden_states = encoder_hidden_states[:, :end_pos] # only use text
 
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
@@ -519,6 +522,9 @@ class CNAttnProcessor2_0:
             end_pos = encoder_hidden_states.shape[1] - self.num_tokens
             encoder_hidden_states = encoder_hidden_states[:, :end_pos] # only use text
             encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
+        else: # get back text
+            end_pos = encoder_hidden_states.shape[1] - self.num_tokens
+            encoder_hidden_states = encoder_hidden_states[:, :end_pos] # only use text
 
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
