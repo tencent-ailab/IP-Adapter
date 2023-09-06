@@ -402,9 +402,9 @@ class CNAttnProcessor:
     Default processor for performing attention-related computations.
     """
 
-    def __init__(self, text_context_len=77):
+    def __init__(self, text_context_len=77, num_tokens = 4):
         self.text_context_len = text_context_len
-
+        self.num_tokens = num_tokens
     def __call__(
         self,
         attn,
@@ -437,7 +437,8 @@ class CNAttnProcessor:
         if encoder_hidden_states is None:
             encoder_hidden_states = hidden_states
         elif attn.norm_cross:
-            encoder_hidden_states = encoder_hidden_states[:, :self.text_context_len] # only use text
+            end_pos = encoder_hidden_states.shape[1] - self.num_tokens
+            encoder_hidden_states = encoder_hidden_states[:, :end_pos] # only use text
             encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
 
         key = attn.to_k(encoder_hidden_states)
@@ -472,10 +473,11 @@ class CNAttnProcessor2_0:
     Processor for implementing scaled dot-product attention (enabled by default if you're using PyTorch 2.0).
     """
 
-    def __init__(self, text_context_len=77):
+    def __init__(self, text_context_len=77,  num_tokens = 4):
         if not hasattr(F, "scaled_dot_product_attention"):
             raise ImportError("AttnProcessor2_0 requires PyTorch 2.0, to use it, please upgrade PyTorch to 2.0.")
         self.text_context_len = text_context_len
+        self.num_tokens = num_tokens
 
     def __call__(
         self,
@@ -514,7 +516,8 @@ class CNAttnProcessor2_0:
         if encoder_hidden_states is None:
             encoder_hidden_states = hidden_states
         elif attn.norm_cross:
-            encoder_hidden_states = encoder_hidden_states[:, :self.text_context_len]
+            end_pos = encoder_hidden_states.shape[1] - self.num_tokens
+            encoder_hidden_states = encoder_hidden_states[:, :end_pos] # only use text
             encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
 
         key = attn.to_k(encoder_hidden_states)
