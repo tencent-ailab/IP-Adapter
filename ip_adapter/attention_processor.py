@@ -101,7 +101,7 @@ class IPAttnProcessor(nn.Module):
         self.to_k_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
 
-        self.num_tokens = 4
+        self.num_tokens = num_tokens
     def __call__(
         self,
         attn,
