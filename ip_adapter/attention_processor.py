@@ -90,7 +90,7 @@ class IPAttnProcessor(nn.Module):
             the weight scale of image prompt.
     """
 
-    def __init__(self, hidden_size, cross_attention_dim=None, text_context_len=77, scale=1.0):
+    def __init__(self, hidden_size, cross_attention_dim=None, text_context_len=77, scale=1.0, num_tokens = 4):
         super().__init__()
 
         self.hidden_size = hidden_size
@@ -101,6 +101,7 @@ class IPAttnProcessor(nn.Module):
         self.to_k_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
 
+        self.num_tokens = 4
     def __call__(
         self,
         attn,
@@ -135,8 +136,11 @@ class IPAttnProcessor(nn.Module):
         elif attn.norm_cross:
             encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
             
-        # split hidden states
-        encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :self.text_context_len, :], encoder_hidden_states[:, self.text_context_len:, :]
+        # get encoder_hidden_states, ip_hidden_states
+        multi_length = (encoder_hidden_states.shape[1] - self.num_tokens) / self.text_context_len
+        end_pos = int(self.text_context_len * multi_length)
+        encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :end_pos, :], encoder_hidden_states[:, end_pos:, :]
+
 
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
@@ -280,7 +284,7 @@ class IPAttnProcessor2_0(torch.nn.Module):
             the weight scale of image prompt.
     """
 
-    def __init__(self, hidden_size, cross_attention_dim=None, text_context_len=77, scale=1.0):
+    def __init__(self, hidden_size, cross_attention_dim=None, text_context_len=77, scale=1.0, num_tokens = 4):
         super().__init__()
 
         if not hasattr(F, "scaled_dot_product_attention"):
@@ -293,6 +297,8 @@ class IPAttnProcessor2_0(torch.nn.Module):
 
         self.to_k_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
+
+        self.num_tokens = num_tokens
 
     def __call__(
         self,
@@ -333,8 +339,10 @@ class IPAttnProcessor2_0(torch.nn.Module):
         elif attn.norm_cross:
             encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
 
-        # split hidden states
-        encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :self.text_context_len, :], encoder_hidden_states[:, self.text_context_len:, :]
+        # get encoder_hidden_states, ip_hidden_states
+        multi_length = (encoder_hidden_states.shape[1] - self.num_tokens) / self.text_context_len
+        end_pos = int(self.text_context_len * multi_length)
+        encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :end_pos, :], encoder_hidden_states[:, end_pos:, :]
 
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)

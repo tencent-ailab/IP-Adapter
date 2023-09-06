@@ -76,7 +76,7 @@ class IPAdapter:
                 attn_procs[name] = AttnProcessor()
             else:
                 attn_procs[name] = IPAttnProcessor(hidden_size=hidden_size, cross_attention_dim=cross_attention_dim,
-                scale=1.0).to(self.device, dtype=torch.float16)
+                scale=1.0,num_tokens= self.num_tokens).to(self.device, dtype=torch.float16)
         unet.set_attn_processor(attn_procs)
         if hasattr(self.pipe, "controlnet"):
             self.pipe.controlnet.set_attn_processor(CNAttnProcessor())
