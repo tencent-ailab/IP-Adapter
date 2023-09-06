@@ -7,7 +7,7 @@ from transformers import CLIPVisionModelWithProjection, CLIPImageProcessor
 from PIL import Image
 
 from .utils import is_torch2_available
-if is_torch2_available:
+if is_torch2_available():
     from .attention_processor import IPAttnProcessor2_0 as IPAttnProcessor, AttnProcessor2_0 as AttnProcessor, CNAttnProcessor2_0 as CNAttnProcessor
 else:
     from .attention_processor import IPAttnProcessor, AttnProcessor, CNAttnProcessor
