@@ -84,23 +84,23 @@ class IPAttnProcessor(nn.Module):
             The hidden size of the attention layer.
         cross_attention_dim (`int`):
             The number of channels in the `encoder_hidden_states`.
-        text_context_len (`int`, defaults to 77):
-            The context length of the text features.
         scale (`float`, defaults to 1.0):
             the weight scale of image prompt.
+        num_tokens (`int`, defaults to 4 when do ip_adapter_plus it should be 16):
+            The context length of the image features.
     """
 
-    def __init__(self, hidden_size, cross_attention_dim=None, text_context_len=77, scale=1.0):
+    def __init__(self, hidden_size, cross_attention_dim=None, scale=1.0, num_tokens = 4):
         super().__init__()
 
         self.hidden_size = hidden_size
         self.cross_attention_dim = cross_attention_dim
-        self.text_context_len = text_context_len
         self.scale = scale
 
         self.to_k_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
 
+        self.num_tokens = num_tokens
     def __call__(
         self,
         attn,
@@ -135,8 +135,10 @@ class IPAttnProcessor(nn.Module):
         elif attn.norm_cross:
             encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
             
-        # split hidden states
-        encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :self.text_context_len, :], encoder_hidden_states[:, self.text_context_len:, :]
+        # get encoder_hidden_states, ip_hidden_states
+        end_pos = encoder_hidden_states.shape[1] - self.num_tokens
+        encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :end_pos, :], encoder_hidden_states[:, end_pos:, :]
+
 
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
@@ -274,13 +276,13 @@ class IPAttnProcessor2_0(torch.nn.Module):
             The hidden size of the attention layer.
         cross_attention_dim (`int`):
             The number of channels in the `encoder_hidden_states`.
-        text_context_len (`int`, defaults to 77):
-            The context length of the text features.
         scale (`float`, defaults to 1.0):
             the weight scale of image prompt.
+        num_tokens (`int`, defaults to 4 when do ip_adapter_plus it should be 16):
+            The context length of the image features.
     """
 
-    def __init__(self, hidden_size, cross_attention_dim=None, text_context_len=77, scale=1.0):
+    def __init__(self, hidden_size, cross_attention_dim=None, scale=1.0, num_tokens = 4):
         super().__init__()
 
         if not hasattr(F, "scaled_dot_product_attention"):
@@ -288,11 +290,12 @@ class IPAttnProcessor2_0(torch.nn.Module):
 
         self.hidden_size = hidden_size
         self.cross_attention_dim = cross_attention_dim
-        self.text_context_len = text_context_len
         self.scale = scale
 
         self.to_k_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
+
+        self.num_tokens = num_tokens
 
     def __call__(
         self,
@@ -333,8 +336,9 @@ class IPAttnProcessor2_0(torch.nn.Module):
         elif attn.norm_cross:
             encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
 
-        # split hidden states
-        encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :self.text_context_len, :], encoder_hidden_states[:, self.text_context_len:, :]
+        # get encoder_hidden_states, ip_hidden_states
+        end_pos = encoder_hidden_states.shape[1] - self.num_tokens
+        encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :end_pos, :], encoder_hidden_states[:, end_pos:, :]
 
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
@@ -396,9 +400,8 @@ class CNAttnProcessor:
     Default processor for performing attention-related computations.
     """
 
-    def __init__(self, text_context_len=77):
-        self.text_context_len = text_context_len
-
+    def __init__(self, num_tokens = 4):
+        self.num_tokens = num_tokens
     def __call__(
         self,
         attn,
@@ -430,9 +433,11 @@ class CNAttnProcessor:
 
         if encoder_hidden_states is None:
             encoder_hidden_states = hidden_states
-        elif attn.norm_cross:
-            encoder_hidden_states = encoder_hidden_states[:, :self.text_context_len] # only use text
-            encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
+        else:
+            end_pos = encoder_hidden_states.shape[1] - self.num_tokens
+            encoder_hidden_states = encoder_hidden_states[:, :end_pos] # only use text
+            if attn.norm_cross:
+                encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
 
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
@@ -466,10 +471,10 @@ class CNAttnProcessor2_0:
     Processor for implementing scaled dot-product attention (enabled by default if you're using PyTorch 2.0).
     """
 
-    def __init__(self, text_context_len=77):
+    def __init__(self,  num_tokens = 4):
         if not hasattr(F, "scaled_dot_product_attention"):
             raise ImportError("AttnProcessor2_0 requires PyTorch 2.0, to use it, please upgrade PyTorch to 2.0.")
-        self.text_context_len = text_context_len
+        self.num_tokens = num_tokens
 
     def __call__(
         self,
@@ -507,9 +512,11 @@ class CNAttnProcessor2_0:
 
         if encoder_hidden_states is None:
             encoder_hidden_states = hidden_states
-        elif attn.norm_cross:
-            encoder_hidden_states = encoder_hidden_states[:, :self.text_context_len]
-            encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
+        else:
+            end_pos = encoder_hidden_states.shape[1] - self.num_tokens
+            encoder_hidden_states = encoder_hidden_states[:, :end_pos] # only use text
+            if attn.norm_cross:
+                encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
 
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
