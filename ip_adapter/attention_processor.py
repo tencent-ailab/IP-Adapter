@@ -90,17 +90,17 @@ class IPAttnProcessor(nn.Module):
             The context length of the image features.
     """
 
-    def __init__(self, hidden_size, cross_attention_dim=None, scale=1.0, num_tokens = 4):
+    def __init__(self, hidden_size, cross_attention_dim=None, scale=1.0, num_tokens=4):
         super().__init__()
 
         self.hidden_size = hidden_size
         self.cross_attention_dim = cross_attention_dim
         self.scale = scale
+        self.num_tokens = num_tokens
 
         self.to_k_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
 
-        self.num_tokens = num_tokens
     def __call__(
         self,
         attn,
@@ -132,13 +132,12 @@ class IPAttnProcessor(nn.Module):
 
         if encoder_hidden_states is None:
             encoder_hidden_states = hidden_states
-        elif attn.norm_cross:
-            encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
-            
-        # get encoder_hidden_states, ip_hidden_states
-        end_pos = encoder_hidden_states.shape[1] - self.num_tokens
-        encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :end_pos, :], encoder_hidden_states[:, end_pos:, :]
-
+        else:
+            # get encoder_hidden_states, ip_hidden_states
+            end_pos = encoder_hidden_states.shape[1] - self.num_tokens
+            encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :end_pos, :], encoder_hidden_states[:, end_pos:, :]
+            if attn.norm_cross:
+                encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
 
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
@@ -282,7 +281,7 @@ class IPAttnProcessor2_0(torch.nn.Module):
             The context length of the image features.
     """
 
-    def __init__(self, hidden_size, cross_attention_dim=None, scale=1.0, num_tokens = 4):
+    def __init__(self, hidden_size, cross_attention_dim=None, scale=1.0, num_tokens=4):
         super().__init__()
 
         if not hasattr(F, "scaled_dot_product_attention"):
@@ -291,11 +290,10 @@ class IPAttnProcessor2_0(torch.nn.Module):
         self.hidden_size = hidden_size
         self.cross_attention_dim = cross_attention_dim
         self.scale = scale
+        self.num_tokens = num_tokens
 
         self.to_k_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
-
-        self.num_tokens = num_tokens
 
     def __call__(
         self,
@@ -333,12 +331,12 @@ class IPAttnProcessor2_0(torch.nn.Module):
 
         if encoder_hidden_states is None:
             encoder_hidden_states = hidden_states
-        elif attn.norm_cross:
-            encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
-
-        # get encoder_hidden_states, ip_hidden_states
-        end_pos = encoder_hidden_states.shape[1] - self.num_tokens
-        encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :end_pos, :], encoder_hidden_states[:, end_pos:, :]
+        else:
+            # get encoder_hidden_states, ip_hidden_states
+            end_pos = encoder_hidden_states.shape[1] - self.num_tokens
+            encoder_hidden_states, ip_hidden_states = encoder_hidden_states[:, :end_pos, :], encoder_hidden_states[:, end_pos:, :]
+            if attn.norm_cross:
+                encoder_hidden_states = attn.norm_encoder_hidden_states(encoder_hidden_states)
 
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
@@ -400,8 +398,9 @@ class CNAttnProcessor:
     Default processor for performing attention-related computations.
     """
 
-    def __init__(self, num_tokens = 4):
+    def __init__(self, num_tokens=4):
         self.num_tokens = num_tokens
+
     def __call__(
         self,
         attn,
@@ -471,7 +470,7 @@ class CNAttnProcessor2_0:
     Processor for implementing scaled dot-product attention (enabled by default if you're using PyTorch 2.0).
     """
 
-    def __init__(self,  num_tokens = 4):
+    def __init__(self,  num_tokens=4):
         if not hasattr(F, "scaled_dot_product_attention"):
             raise ImportError("AttnProcessor2_0 requires PyTorch 2.0, to use it, please upgrade PyTorch to 2.0.")
         self.num_tokens = num_tokens
