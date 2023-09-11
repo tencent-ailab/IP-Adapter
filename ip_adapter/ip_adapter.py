@@ -82,9 +82,9 @@ class IPAdapter:
         if hasattr(self.pipe, "controlnet"):
             if isinstance(self.pipe.controlnet, MultiControlNetModel):
                 for controlnet in self.pipe.controlnet.nets:
-                    controlnet.set_attn_processor(CNAttnProcessor(num_tokens= self.num_tokens))
+                    controlnet.set_attn_processor(CNAttnProcessor(num_tokens=self.num_tokens))
             else:
-                self.pipe.controlnet.set_attn_processor(CNAttnProcessor(num_tokens= self.num_tokens))
+                self.pipe.controlnet.set_attn_processor(CNAttnProcessor(num_tokens=self.num_tokens))
         
     def load_ip_adapter(self):
         state_dict = torch.load(self.ip_ckpt, map_location="cpu")
