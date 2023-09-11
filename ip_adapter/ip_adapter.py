@@ -3,6 +3,7 @@ from typing import List
 
 import torch
 from diffusers import StableDiffusionPipeline
+from diffusers.pipelines.controlnet import MultiControlNetModel
 from transformers import CLIPVisionModelWithProjection, CLIPImageProcessor
 from PIL import Image
 
@@ -79,7 +80,11 @@ class IPAdapter:
                 scale=1.0,num_tokens= self.num_tokens).to(self.device, dtype=torch.float16)
         unet.set_attn_processor(attn_procs)
         if hasattr(self.pipe, "controlnet"):
-            self.pipe.controlnet.set_attn_processor(CNAttnProcessor(num_tokens= self.num_tokens))
+            if isinstance(self.pipe.controlnet, MultiControlNetModel):
+                for controlnet in self.pipe.controlnet.nets:
+                    controlnet.set_attn_processor(CNAttnProcessor(num_tokens=self.num_tokens))
+            else:
+                self.pipe.controlnet.set_attn_processor(CNAttnProcessor(num_tokens=self.num_tokens))
         
     def load_ip_adapter(self):
         state_dict = torch.load(self.ip_ckpt, map_location="cpu")
