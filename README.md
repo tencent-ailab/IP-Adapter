@@ -72,6 +72,12 @@ you can download models from [here](https://huggingface.co/h94/IP-Adapter). To r
 - If you only use the image prompt, you can set the `scale=1.0` and `text_prompt=""`(or some generic text prompts, e.g. "best quality", you can also use any negative text prompt). If you lower the `scale`, more diverse images can be generated, but they may not be as consistent with the image prompt.
 - For multimodal prompts, you can adjust the `scale` to get the best results. In most cases, setting `scale=0.5` can get good results. For the version of SD 1.5, we recommend using community models to generate good images.
 
+**IP-Adapter for non-square images**
+
+As the image is center cropped in the default image processor of CLIP, IP-Adapter works best for square images. For the non square images, it will miss the information outside the center. But you can just resize to 224x224 for non-square images, the comparison is as follows:
+
+![](assets/demo/crop_and_resize_cmp.jpg)
+
 ### SDXL_1.0
 
 - [**ip_adapter_sdxl_demo**](ip_adapter_sdxl_demo.ipynb): image variations with image prompt.
