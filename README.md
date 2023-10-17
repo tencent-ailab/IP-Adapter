@@ -111,6 +111,14 @@ accelerate launch --num_processes 8 --multi_gpu --mixed_precision "fp16" \
   --save_steps=10000
 ```
 
+
+## Third-party Usage
+- [IP-Adapter for WebUI](https://github.com/Mikubill/sd-webui-controlnet) [[release notes](https://github.com/Mikubill/sd-webui-controlnet/discussions/2039)]
+- IP-Adapter for ComfyUI [[IPAdapter-ComfyUI](https://github.com/laksjdjf/IPAdapter-ComfyUI) or [ComfyUI_IPAdapter_plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus)]
+- [IP-Adapter for InvokeAI](https://github.com/invoke-ai/InvokeAI) [[release notes](https://github.com/invoke-ai/InvokeAI/releases/tag/v3.2.0)]
+- [IP-Adapter for AnimateDiff prompt travel](https://github.com/s9roll7/animatediff-cli-prompt-travel)
+- [Diffusers_IPAdapter](https://github.com/cubiq/Diffusers_IPAdapter): more features such as supporting multiple input images
+
 ## Disclaimer
 
 This project strives to positively impact the domain of AI-driven image generation. Users are granted the freedom to create images using this tool, but they are expected to comply with local laws and utilize it in a responsible manner. **The developers do not assume any responsibility for potential misuse by users.**
