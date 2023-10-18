@@ -128,7 +128,7 @@ class IPAdapter(torch.nn.Module):
         state_dict = torch.load(ckpt_path, map_location="cpu")
 
         # Load state dict for image_proj_model and adapter_modules
-        self.image_proj_model.load_state_dict(state_dict["image_proj"], strict=False)
+        self.image_proj_model.load_state_dict(state_dict["image_proj"], strict=True)
         self.adapter_modules.load_state_dict(state_dict["ip_adapter"], strict=True)
 
         # Calculate new checksums
