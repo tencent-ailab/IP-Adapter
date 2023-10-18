@@ -150,11 +150,14 @@ def collate_fn(data):
 
 class IPAdapter(torch.nn.Module):
     """IP-Adapter"""
-    def __init__(self, unet, image_proj_model, adapter_modules):
+    def __init__(self, unet, image_proj_model, adapter_modules, ckpt_path=None):
         super().__init__()
         self.unet = unet
         self.image_proj_model = image_proj_model
         self.adapter_modules = adapter_modules
+
+        if ckpt_path is not None:
+            self.load_from_checkpoint(ckpt_path)
 
     def forward(self, noisy_latents, timesteps, encoder_hidden_states, unet_added_cond_kwargs, image_embeds):
         ip_tokens = self.image_proj_model(image_embeds)
@@ -162,8 +165,29 @@ class IPAdapter(torch.nn.Module):
         # Predict the noise residual
         noise_pred = self.unet(noisy_latents, timesteps, encoder_hidden_states, added_cond_kwargs=unet_added_cond_kwargs).sample
         return noise_pred
+
+    def load_from_checkpoint(self, ckpt_path: str):
+        # Calculate original checksums
+        orig_ip_proj_sum = torch.sum(torch.stack([torch.sum(p) for p in self.image_proj_model.parameters()]))
+        orig_adapter_sum = torch.sum(torch.stack([torch.sum(p) for p in self.adapter_modules.parameters()]))
+
+        state_dict = torch.load(ckpt_path, map_location="cpu")
+
+        # Load state dict for image_proj_model and adapter_modules
+        self.image_proj_model.load_state_dict(state_dict["image_proj"], strict=True)
+        self.adapter_modules.load_state_dict(state_dict["ip_adapter"], strict=True)
+
+        # Calculate new checksums
+        new_ip_proj_sum = torch.sum(torch.stack([torch.sum(p) for p in self.image_proj_model.parameters()]))
+        new_adapter_sum = torch.sum(torch.stack([torch.sum(p) for p in self.adapter_modules.parameters()]))
+
+        # Verify if the weights have changed
+        assert orig_ip_proj_sum != new_ip_proj_sum, "Weights of image_proj_model did not change!"
+        assert orig_adapter_sum != new_adapter_sum, "Weights of adapter_modules did not change!"
+
+        print(f"Successfully loaded weights from checkpoint {ckpt_path}")
     
-    
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Simple example of a training script.")
     parser.add_argument(
@@ -172,6 +196,12 @@ def parse_args():
         default=None,
         required=True,
         help="Path to pretrained model or model identifier from huggingface.co/models.",
+    )
+    parser.add_argument(
+        "--pretrained_ip_adapter_path",
+        type=str,
+        default=None,
+        help="Path to pretrained ip adapter model. If not specified weights are initialized randomly.",
     )
     parser.add_argument(
         "--data_json_file",
@@ -340,7 +370,7 @@ def main():
     unet.set_attn_processor(attn_procs)
     adapter_modules = torch.nn.ModuleList(unet.attn_processors.values())
     
-    ip_adapter = IPAdapter(unet, image_proj_model, adapter_modules)
+    ip_adapter = IPAdapter(unet, image_proj_model, adapter_modules, args.pretrained_ip_adapter_path)
     
     weight_dtype = torch.float32
     if accelerator.mixed_precision == "fp16":
