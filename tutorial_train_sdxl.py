@@ -8,6 +8,7 @@ import time
 
 import torch
 import torch.nn.functional as F
+import numpy as np
 from torchvision import transforms
 from PIL import Image
 from transformers import CLIPImageProcessor
@@ -15,7 +16,7 @@ from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration
 from diffusers import AutoencoderKL, DDPMScheduler, UNet2DConditionModel
-from transformers import CLIPTextModel, CLIPTokenizer, CLIPVisionModelWithProjection
+from transformers import CLIPTextModel, CLIPTokenizer, CLIPVisionModelWithProjection, CLIPTextModelWithProjection
 
 from ip_adapter.ip_adapter import ImageProjModel
 from ip_adapter.utils import is_torch2_available
@@ -28,24 +29,26 @@ else:
 # Dataset
 class MyDataset(torch.utils.data.Dataset):
 
-    def __init__(self, json_file, tokenizer, size=512, t_drop_rate=0.05, i_drop_rate=0.05, ti_drop_rate=0.05, image_root_path=""):
+    def __init__(self, json_file, tokenizer, tokenizer_2, size=1024, center_crop=True, t_drop_rate=0.05, i_drop_rate=0.05, ti_drop_rate=0.05, image_root_path=""):
         super().__init__()
 
         self.tokenizer = tokenizer
+        self.tokenizer_2 = tokenizer_2
         self.size = size
+        self.center_crop = center_crop
         self.i_drop_rate = i_drop_rate
         self.t_drop_rate = t_drop_rate
         self.ti_drop_rate = ti_drop_rate
         self.image_root_path = image_root_path
-
+    
         self.data = json.load(open(json_file)) # list of dict: [{"image_file": "1.png", "text": "A dog"}]
 
         self.transform = transforms.Compose([
             transforms.Resize(self.size, interpolation=transforms.InterpolationMode.BILINEAR),
-            transforms.CenterCrop(self.size),
             transforms.ToTensor(),
             transforms.Normalize([0.5], [0.5]),
         ])
+
         self.clip_image_processor = CLIPImageProcessor()
         
     def __getitem__(self, idx):
@@ -55,7 +58,28 @@ class MyDataset(torch.utils.data.Dataset):
         
         # read image
         raw_image = Image.open(os.path.join(self.image_root_path, image_file))
-        image = self.transform(raw_image.convert("RGB"))
+        
+        # original size
+        original_width, original_height = raw_image.size
+        original_size = torch.tensor([original_height, original_width])
+        
+        image_tensor = self.transform(raw_image.convert("RGB"))
+        # random crop
+        delta_h = image_tensor.shape[1] - self.size
+        delta_w = image_tensor.shape[2] - self.size
+        assert not all([delta_h, delta_w])
+        
+        if self.center_crop:
+            top = delta_h // 2
+            left = delta_w // 2
+        else:
+            top = np.random.randint(0, delta_h + 1)
+            left = np.random.randint(0, delta_w + 1)
+        image = transforms.functional.crop(
+            image_tensor, top=top, left=left, height=self.size, width=self.size
+        )
+        crop_coords_top_left = torch.tensor([top, left]) 
+
         clip_image = self.clip_image_processor(images=raw_image, return_tensors="pt").pixel_values
         
         # drop
@@ -68,6 +92,7 @@ class MyDataset(torch.utils.data.Dataset):
         elif rand_num < (self.i_drop_rate + self.t_drop_rate + self.ti_drop_rate):
             text = ""
             drop_image_embed = 1
+
         # get text and tokenize
         text_input_ids = self.tokenizer(
             text,
@@ -77,13 +102,26 @@ class MyDataset(torch.utils.data.Dataset):
             return_tensors="pt"
         ).input_ids
         
+        text_input_ids_2 = self.tokenizer_2(
+            text,
+            max_length=self.tokenizer_2.model_max_length,
+            padding="max_length",
+            truncation=True,
+            return_tensors="pt"
+        ).input_ids
+        
         return {
             "image": image,
             "text_input_ids": text_input_ids,
+            "text_input_ids_2": text_input_ids_2,
             "clip_image": clip_image,
-            "drop_image_embed": drop_image_embed
+            "drop_image_embed": drop_image_embed,
+            "original_size": original_size,
+            "crop_coords_top_left": crop_coords_top_left,
+            "target_size": torch.tensor([self.size, self.size]),
         }
-
+        
+    
     def __len__(self):
         return len(self.data)
     
@@ -91,14 +129,22 @@ class MyDataset(torch.utils.data.Dataset):
 def collate_fn(data):
     images = torch.stack([example["image"] for example in data])
     text_input_ids = torch.cat([example["text_input_ids"] for example in data], dim=0)
+    text_input_ids_2 = torch.cat([example["text_input_ids_2"] for example in data], dim=0)
     clip_images = torch.cat([example["clip_image"] for example in data], dim=0)
     drop_image_embeds = [example["drop_image_embed"] for example in data]
+    original_size = torch.stack([example["original_size"] for example in data])
+    crop_coords_top_left = torch.stack([example["crop_coords_top_left"] for example in data])
+    target_size = torch.stack([example["target_size"] for example in data])
 
     return {
         "images": images,
         "text_input_ids": text_input_ids,
+        "text_input_ids_2": text_input_ids_2,
         "clip_images": clip_images,
-        "drop_image_embeds": drop_image_embeds
+        "drop_image_embeds": drop_image_embeds,
+        "original_size": original_size,
+        "crop_coords_top_left": crop_coords_top_left,
+        "target_size": target_size,
     }
     
 
@@ -113,11 +159,11 @@ class IPAdapter(torch.nn.Module):
         if ckpt_path is not None:
             self.load_from_checkpoint(ckpt_path)
 
-    def forward(self, noisy_latents, timesteps, encoder_hidden_states, image_embeds):
+    def forward(self, noisy_latents, timesteps, encoder_hidden_states, unet_added_cond_kwargs, image_embeds):
         ip_tokens = self.image_proj_model(image_embeds)
         encoder_hidden_states = torch.cat([encoder_hidden_states, ip_tokens], dim=1)
         # Predict the noise residual
-        noise_pred = self.unet(noisy_latents, timesteps, encoder_hidden_states).sample
+        noise_pred = self.unet(noisy_latents, timesteps, encoder_hidden_states, added_cond_kwargs=unet_added_cond_kwargs).sample
         return noise_pred
 
     def load_from_checkpoint(self, ckpt_path: str):
@@ -140,9 +186,8 @@ class IPAdapter(torch.nn.Module):
         assert orig_adapter_sum != new_adapter_sum, "Weights of adapter_modules did not change!"
 
         print(f"Successfully loaded weights from checkpoint {ckpt_path}")
+    
 
-    
-    
 def parse_args():
     parser = argparse.ArgumentParser(description="Simple example of a training script.")
     parser.add_argument(
@@ -213,6 +258,7 @@ def parse_args():
     parser.add_argument(
         "--train_batch_size", type=int, default=8, help="Batch size (per device) for the training dataloader."
     )
+    parser.add_argument("--noise_offset", type=float, default=None, help="noise offset")
     parser.add_argument(
         "--dataloader_num_workers",
         type=int,
@@ -279,6 +325,8 @@ def main():
     noise_scheduler = DDPMScheduler.from_pretrained(args.pretrained_model_name_or_path, subfolder="scheduler")
     tokenizer = CLIPTokenizer.from_pretrained(args.pretrained_model_name_or_path, subfolder="tokenizer")
     text_encoder = CLIPTextModel.from_pretrained(args.pretrained_model_name_or_path, subfolder="text_encoder")
+    tokenizer_2 = CLIPTokenizer.from_pretrained(args.pretrained_model_name_or_path, subfolder="tokenizer_2")
+    text_encoder_2 = CLIPTextModelWithProjection.from_pretrained(args.pretrained_model_name_or_path, subfolder="text_encoder_2")
     vae = AutoencoderKL.from_pretrained(args.pretrained_model_name_or_path, subfolder="vae")
     unet = UNet2DConditionModel.from_pretrained(args.pretrained_model_name_or_path, subfolder="unet")
     image_encoder = CLIPVisionModelWithProjection.from_pretrained(args.image_encoder_path)
@@ -286,13 +334,15 @@ def main():
     unet.requires_grad_(False)
     vae.requires_grad_(False)
     text_encoder.requires_grad_(False)
+    text_encoder_2.requires_grad_(False)
     image_encoder.requires_grad_(False)
     
     #ip-adapter
+    num_tokens = 4
     image_proj_model = ImageProjModel(
         cross_attention_dim=unet.config.cross_attention_dim,
         clip_embeddings_dim=image_encoder.config.projection_dim,
-        clip_extra_context_tokens=4,
+        clip_extra_context_tokens=num_tokens,
     )
     # init adapter modules
     attn_procs = {}
@@ -315,7 +365,7 @@ def main():
                 "to_k_ip.weight": unet_sd[layer_name + ".to_k.weight"],
                 "to_v_ip.weight": unet_sd[layer_name + ".to_v.weight"],
             }
-            attn_procs[name] = IPAttnProcessor(hidden_size=hidden_size, cross_attention_dim=cross_attention_dim)
+            attn_procs[name] = IPAttnProcessor(hidden_size=hidden_size, cross_attention_dim=cross_attention_dim, num_tokens=num_tokens)
             attn_procs[name].load_state_dict(weights)
     unet.set_attn_processor(attn_procs)
     adapter_modules = torch.nn.ModuleList(unet.attn_processors.values())
@@ -328,8 +378,9 @@ def main():
     elif accelerator.mixed_precision == "bf16":
         weight_dtype = torch.bfloat16
     #unet.to(accelerator.device, dtype=weight_dtype)
-    vae.to(accelerator.device, dtype=weight_dtype)
+    vae.to(accelerator.device) # use fp32
     text_encoder.to(accelerator.device, dtype=weight_dtype)
+    text_encoder_2.to(accelerator.device, dtype=weight_dtype)
     image_encoder.to(accelerator.device, dtype=weight_dtype)
     
     # optimizer
@@ -337,7 +388,7 @@ def main():
     optimizer = torch.optim.AdamW(params_to_opt, lr=args.learning_rate, weight_decay=args.weight_decay)
     
     # dataloader
-    train_dataset = MyDataset(args.data_json_file, tokenizer=tokenizer, size=args.resolution, image_root_path=args.data_root_path)
+    train_dataset = MyDataset(args.data_json_file, tokenizer=tokenizer, tokenizer_2=tokenizer_2, size=args.resolution, image_root_path=args.data_root_path)
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset,
         shuffle=True,
@@ -357,11 +408,17 @@ def main():
             with accelerator.accumulate(ip_adapter):
                 # Convert images to latent space
                 with torch.no_grad():
-                    latents = vae.encode(batch["images"].to(accelerator.device, dtype=weight_dtype)).latent_dist.sample()
+                    # vae of sdxl should use fp32
+                    latents = vae.encode(batch["images"].to(accelerator.device, dtype=torch.float32)).latent_dist.sample()
                     latents = latents * vae.config.scaling_factor
+                    latents = latents.to(accelerator.device, dtype=weight_dtype)
 
                 # Sample noise that we'll add to the latents
                 noise = torch.randn_like(latents)
+                if args.noise_offset:
+                    # https://www.crosslabs.org//blog/diffusion-with-offset-noise
+                    noise += args.noise_offset * torch.randn((latents.shape[0], latents.shape[1], 1, 1)).to(accelerator.device, dtype=weight_dtype)
+
                 bsz = latents.shape[0]
                 # Sample a random timestep for each image
                 timesteps = torch.randint(0, noise_scheduler.num_train_timesteps, (bsz,), device=latents.device)
@@ -382,10 +439,24 @@ def main():
                 image_embeds = torch.stack(image_embeds_)
             
                 with torch.no_grad():
-                    encoder_hidden_states = text_encoder(batch["text_input_ids"].to(accelerator.device))[0]
+                    encoder_output = text_encoder(batch['text_input_ids'].to(accelerator.device), output_hidden_states=True)
+                    text_embeds = encoder_output.hidden_states[-2]
+                    encoder_output_2 = text_encoder_2(batch['text_input_ids_2'].to(accelerator.device), output_hidden_states=True)
+                    pooled_text_embeds = encoder_output_2[0]
+                    text_embeds_2 = encoder_output_2.hidden_states[-2]
+                    text_embeds = torch.concat([text_embeds, text_embeds_2], dim=-1) # concat
+                        
+                # add cond
+                add_time_ids = [
+                    batch["original_size"].to(accelerator.device),
+                    batch["crop_coords_top_left"].to(accelerator.device),
+                    batch["target_size"].to(accelerator.device),
+                ]
+                add_time_ids = torch.cat(add_time_ids, dim=1).to(accelerator.device, dtype=weight_dtype)
+                unet_added_cond_kwargs = {"text_embeds": pooled_text_embeds, "time_ids": add_time_ids}
                 
-                noise_pred = ip_adapter(noisy_latents, timesteps, encoder_hidden_states, image_embeds)
-        
+                noise_pred = ip_adapter(noisy_latents, timesteps, text_embeds, unet_added_cond_kwargs, image_embeds)
+                
                 loss = F.mse_loss(noise_pred.float(), noise.float(), reduction="mean")
             
                 # Gather the losses across all processes for logging (if we use distributed training).
