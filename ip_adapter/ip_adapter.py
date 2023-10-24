@@ -114,7 +114,7 @@ class IPAdapter:
         negative_prompt=None,
         scale=1.0,
         num_samples=4,
-        seed=-1,
+        seed=None,
         guidance_scale=7.5,
         num_inference_steps=30,
         **kwargs,
@@ -173,7 +173,7 @@ class IPAdapterXL(IPAdapter):
         negative_prompt=None,
         scale=1.0,
         num_samples=4,
-        seed=-1,
+        seed=None,
         num_inference_steps=30,
         **kwargs,
     ):
@@ -285,7 +285,7 @@ class IPAdapterPlusXL(IPAdapter):
         negative_prompt=None,
         scale=1.0,
         num_samples=4,
-        seed=-1,
+        seed=None,
         num_inference_steps=30,
         **kwargs,
     ):
