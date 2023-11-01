@@ -1,3 +1,4 @@
+import inspect
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
@@ -271,15 +272,32 @@ class StableDiffusionXLCustomPipeline(StableDiffusionXLPipeline):
 
         # 7. Prepare added time ids & embeddings
         add_text_embeds = pooled_prompt_embeds
+        if self.text_encoder_2 is None:
+            text_encoder_projection_dim = int(pooled_prompt_embeds.shape[-1])
+        else:
+            text_encoder_projection_dim = self.text_encoder_2.config.projection_dim
+
+        get_add_time_ids_args = {"original_size": original_size, 
+                                 "crops_coords_top_left": crops_coords_top_left, 
+                                 "target_size": target_size, 
+                                 "dtype": prompt_embeds.dtype, }
+
+        if "text_encoder_projection_dim" in list(inspect.getfullargspec(self._get_add_time_ids))[0]:
+            get_add_time_ids_args["text_encoder_projection_dim"] = text_encoder_projection_dim
+            
         add_time_ids = self._get_add_time_ids(
-            original_size, crops_coords_top_left, target_size, dtype=prompt_embeds.dtype
+            **get_add_time_ids_args
         )
+
         if negative_original_size is not None and negative_target_size is not None:
+            negative_get_add_time_ids_args = {"original_size": negative_original_size,
+                                     "crops_coords_top_left": negative_crops_coords_top_left,
+                                     "target_size": negative_target_size,
+                                     "dtype": prompt_embeds.dtype, }
+            if "text_encoder_projection_dim" in list(inspect.getfullargspec(self._get_add_time_ids))[0]:
+                negative_get_add_time_ids_args["text_encoder_projection_dim"] = text_encoder_projection_dim
             negative_add_time_ids = self._get_add_time_ids(
-                negative_original_size,
-                negative_crops_coords_top_left,
-                negative_target_size,
-                dtype=prompt_embeds.dtype,
+                **negative_get_add_time_ids_args
             )
         else:
             negative_add_time_ids = add_time_ids
