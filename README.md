@@ -1,9 +1,10 @@
-# IP-Adapter: Text Compatible Image Prompt Adapter for Text-to-Image Diffusion Models
+# ___***IP-Adapter: Text Compatible Image Prompt Adapter for Text-to-Image Diffusion Models***___
 
-<div align="center">
+<a href='https://ip-adapter.github.io'><img src='https://img.shields.io/badge/Project-Page-green'></a> 
+<a href='https://arxiv.org/abs/2308.06721'><img src='https://img.shields.io/badge/Technique-Report-red'></a> 
+<a href='https://huggingface.co/h94/IP-Adapter'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-blue'></a>
+[![GitHub](https://img.shields.io/github/stars/tencent-ailab/IP-Adapter?style=social)](https://github.com/tencent-ailab/IP-Adapter/)
 
-[**Project Page**](https://ip-adapter.github.io) **|** [**Paper (ArXiv)**](https://arxiv.org/abs/2308.06721)
-</div>
 
 ---
 
