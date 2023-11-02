@@ -6,6 +6,7 @@ from diffusers import StableDiffusionPipeline
 from diffusers.pipelines.controlnet import MultiControlNetModel
 from transformers import CLIPVisionModelWithProjection, CLIPImageProcessor
 from PIL import Image
+from safetensors import safe_open
 
 from .utils import is_torch2_available
 if is_torch2_available():
@@ -87,7 +88,16 @@ class IPAdapter:
                 self.pipe.controlnet.set_attn_processor(CNAttnProcessor(num_tokens=self.num_tokens))
         
     def load_ip_adapter(self):
-        state_dict = torch.load(self.ip_ckpt, map_location="cpu")
+        if os.path.splitext(self.ip_ckpt)[-1] == ".safetensors":
+            state_dict = {"image_proj": {}, "ip_adapter": {}}
+            with safe_open(self.ip_ckpt, framework="pt", device="cpu") as f:
+                for key in f.keys():
+                    if key.startswith("image_proj."):
+                        state_dict["image_proj"][key.replace("image_proj.", "")] = f.get_tensor(key)
+                    elif key.startswith("ip_adapter."):
+                        state_dict["ip_adapter"][key.replace("ip_adapter.", "")] = f.get_tensor(key)
+        else:
+            state_dict = torch.load(self.ip_ckpt, map_location="cpu")
         self.image_proj_model.load_state_dict(state_dict["image_proj"])
         ip_layers = torch.nn.ModuleList(self.pipe.unet.attn_processors.values())
         ip_layers.load_state_dict(state_dict["ip_adapter"])
