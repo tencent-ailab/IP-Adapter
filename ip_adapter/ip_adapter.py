@@ -255,7 +255,7 @@ class IPAdapterPlus(IPAdapter):
         return image_proj_model
     
     @torch.inference_mode()
-    def get_image_embeds(self, pil_image):
+    def get_image_embeds(self, pil_image=None, clip_image_embeds=None):
         if isinstance(pil_image, Image.Image):
             pil_image = [pil_image]
         clip_image = self.clip_image_processor(images=pil_image, return_tensors="pt").pixel_values
