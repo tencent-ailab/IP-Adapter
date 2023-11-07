@@ -1,4 +1,3 @@
-import inspect
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
@@ -277,27 +276,20 @@ class StableDiffusionXLCustomPipeline(StableDiffusionXLPipeline):
         else:
             text_encoder_projection_dim = self.text_encoder_2.config.projection_dim
 
-        get_add_time_ids_args = {"original_size": original_size, 
-                                 "crops_coords_top_left": crops_coords_top_left, 
-                                 "target_size": target_size, 
-                                 "dtype": prompt_embeds.dtype, }
-
-        if "text_encoder_projection_dim" in list(inspect.getfullargspec(self._get_add_time_ids))[0]:
-            get_add_time_ids_args["text_encoder_projection_dim"] = text_encoder_projection_dim
-            
         add_time_ids = self._get_add_time_ids(
-            **get_add_time_ids_args
+            original_size,
+            crops_coords_top_left,
+            target_size,
+            dtype=prompt_embeds.dtype,
+            text_encoder_projection_dim=text_encoder_projection_dim,
         )
-
         if negative_original_size is not None and negative_target_size is not None:
-            negative_get_add_time_ids_args = {"original_size": negative_original_size,
-                                     "crops_coords_top_left": negative_crops_coords_top_left,
-                                     "target_size": negative_target_size,
-                                     "dtype": prompt_embeds.dtype, }
-            if "text_encoder_projection_dim" in list(inspect.getfullargspec(self._get_add_time_ids))[0]:
-                negative_get_add_time_ids_args["text_encoder_projection_dim"] = text_encoder_projection_dim
             negative_add_time_ids = self._get_add_time_ids(
-                **negative_get_add_time_ids_args
+                negative_original_size,
+                negative_crops_coords_top_left,
+                negative_target_size,
+                dtype=prompt_embeds.dtype,
+                text_encoder_projection_dim=text_encoder_projection_dim,
             )
         else:
             negative_add_time_ids = add_time_ids

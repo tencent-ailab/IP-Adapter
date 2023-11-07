@@ -27,8 +27,24 @@ we present IP-Adapter, an effective and lightweight adapter to achieve image pro
 - [2023/8/16] 🔥 We release the code and models.
 
 
-## Dependencies
-- diffusers >= 0.19.3
+## Installation
+
+```
+# install latest diffusers
+pip install diffusers==0.22.1
+
+# clone the code
+https://github.com/tencent-ailab/IP-Adapter.git
+
+# download the models
+cd IP-Adapter
+git lfs install
+git clone https://huggingface.co/h94/IP-Adapter
+mv IP-Adapter/models models
+mv IP-Adapter/sdxl_models sdxl_models
+
+# then you can use the notebook
+```
 
 ## Download Models
 
