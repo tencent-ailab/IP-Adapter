@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "ip-adapter"
+version = "0.1.0"
+description = "IP-Adapter: Text Compatible Image Prompt Adapter for Text-to-Image Diffusion Models"
+authors = ["Ye, Hu", "Zhang, Jun", "Liu, Sibo", "Han, Xiao", "Yang, Wei"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = [{ include = "ip_adapter" }]
+
+[tool.poetry.dependencies]
+python = ">=3.6"
+
+[tool.ruff]
+line-length = 119
+# Deprecation of Cuda 11.6 and Python 3.7 support for PyTorch 2.0
+target-version = "py38"
+
+# A list of file patterns to omit from linting, in addition to those specified by exclude.
+extend-exclude = ["__pycache__", "*.pyc", "*.egg-info", ".cache"]
+
+select = ["E", "F", "W", "C90", "I", "UP", "B", "C4", "RET", "RUF", "SIM"]
+
+
+ignore = [
+    "UP006",    # UP006: Use list instead of typing.List for type annotations
+    "UP007",    # UP007: Use X | Y for type annotations
+    "UP009",
+    "UP035",
+    "UP038",
+    "E402",
+    "RET504",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = 119
+skip-string-normalization = 1
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

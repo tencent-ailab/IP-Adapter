@@ -33,8 +33,8 @@ we present IP-Adapter, an effective and lightweight adapter to achieve image pro
 # install latest diffusers
 pip install diffusers==0.22.1
 
-# clone the code
-https://github.com/tencent-ailab/IP-Adapter.git
+# install ip-adapter
+pip install git+https://github.com/tencent-ailab/IP-Adapter.git
 
 # download the models
 cd IP-Adapter

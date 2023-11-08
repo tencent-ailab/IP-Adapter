@@ -1,13 +1,12 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
-
 from diffusers import StableDiffusionXLPipeline
 from diffusers.pipelines.stable_diffusion_xl import StableDiffusionXLPipelineOutput
 from diffusers.pipelines.stable_diffusion_xl.pipeline_stable_diffusion_xl import rescale_noise_cfg
 
-
 from .utils import is_torch2_available
+
 if is_torch2_available():
     from .attention_processor import IPAttnProcessor2_0 as IPAttnProcessor
 else:
@@ -15,16 +14,15 @@ else:
 
 
 class StableDiffusionXLCustomPipeline(StableDiffusionXLPipeline):
-
     def set_scale(self, scale):
         for attn_processor in self.unet.attn_processors.values():
             if isinstance(attn_processor, IPAttnProcessor):
                 attn_processor.scale = scale
 
     @torch.no_grad()
-    def __call__(
+    def __call__(  # noqa: C901
         self,
-        prompt: Union[str, List[str]] = None,
+        prompt: Optional[Union[str, List[str]]] = None,
         prompt_2: Optional[Union[str, List[str]]] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
@@ -316,7 +314,7 @@ class StableDiffusionXLCustomPipeline(StableDiffusionXLPipeline):
             )
             num_inference_steps = len(list(filter(lambda ts: ts >= discrete_timestep_cutoff, timesteps)))
             timesteps = timesteps[:num_inference_steps]
-        
+
         # get init conditioning scale
         for attn_processor in self.unet.attn_processors.values():
             if isinstance(attn_processor, IPAttnProcessor):
@@ -325,9 +323,8 @@ class StableDiffusionXLCustomPipeline(StableDiffusionXLPipeline):
 
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
-
                 if (i / len(timesteps) < control_guidance_start) or ((i + 1) / len(timesteps) > control_guidance_end):
-                    self.set_scale(0.)
+                    self.set_scale(0.0)
                 else:
                     self.set_scale(conditioning_scale)
 
@@ -381,7 +378,7 @@ class StableDiffusionXLCustomPipeline(StableDiffusionXLPipeline):
         else:
             image = latents
 
-        if not output_type == "latent":
+        if output_type != "latent":
             # apply watermark if available
             if self.watermark is not None:
                 image = self.watermark.apply_watermark(image)
