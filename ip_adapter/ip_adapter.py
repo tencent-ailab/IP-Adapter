@@ -45,6 +45,23 @@ class ImageProjModel(torch.nn.Module):
         return clip_extra_context_tokens
 
 
+class MLPProjModel(torch.nn.Module):
+    """SD model with image prompt"""
+    def __init__(self, cross_attention_dim=1024, clip_embeddings_dim=1024):
+        super().__init__()
+        
+        self.proj = torch.nn.Sequential(
+            torch.nn.Linear(clip_embeddings_dim, clip_embeddings_dim),
+            torch.nn.GELU(),
+            torch.nn.Linear(clip_embeddings_dim, cross_attention_dim),
+            torch.nn.LayerNorm(cross_attention_dim)
+        )
+        
+    def forward(self, image_embeds):
+        clip_extra_context_tokens = self.proj(image_embeds)
+        return clip_extra_context_tokens
+
+
 class IPAdapter:
     def __init__(self, sd_pipe, image_encoder_path, ip_ckpt, device, num_tokens=4):
         self.device = device
@@ -176,14 +193,13 @@ class IPAdapter:
         uncond_image_prompt_embeds = uncond_image_prompt_embeds.view(bs_embed * num_samples, seq_len, -1)
 
         with torch.inference_mode():
-            prompt_embeds = self.pipe._encode_prompt(
+            prompt_embeds_, negative_prompt_embeds_ = self.pipe.encode_prompt(
                 prompt,
                 device=self.device,
                 num_images_per_prompt=num_samples,
                 do_classifier_free_guidance=True,
                 negative_prompt=negative_prompt,
             )
-            negative_prompt_embeds_, prompt_embeds_ = prompt_embeds.chunk(2)
             prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
 
@@ -293,6 +309,17 @@ class IPAdapterPlus(IPAdapter):
         ).hidden_states[-2]
         uncond_image_prompt_embeds = self.image_proj_model(uncond_clip_image_embeds)
         return image_prompt_embeds, uncond_image_prompt_embeds
+
+
+class IPAdapterFull(IPAdapterPlus):
+    """IP-Adapter with full features"""
+
+    def init_proj(self):
+        image_proj_model = MLPProjModel(
+            cross_attention_dim=self.pipe.unet.config.cross_attention_dim,
+            clip_embeddings_dim=self.image_encoder.config.hidden_size,
+        ).to(self.device, dtype=torch.float16)
+        return image_proj_model
 
 
 class IPAdapterPlusXL(IPAdapter):
