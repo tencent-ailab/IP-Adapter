@@ -16,6 +16,7 @@ we present IP-Adapter, an effective and lightweight adapter to achieve image pro
 ![arch](assets/figs/fig1.png)
 
 ## Release
+- [2023/11/22] IP-Adapter is available in [Diffusers](https://github.com/huggingface/diffusers/pull/5713) thanks to Diffusers Team.
 - [2023/11/10] 🔥 Add an updated version of IP-Adapter-Face. The demo is [here](ip_adapter-full-face_demo.ipynb).
 - [2023/11/05] 🔥 Add text-to-image [demo](ip_adapter_t2i_demo.ipynb) with IP-Adapter and [Kandinsky 2.2 Prior](https://huggingface.co/kandinsky-community/kandinsky-2-2-prior)
 - [2023/11/02] Support [safetensors](https://github.com/huggingface/safetensors)
@@ -138,6 +139,7 @@ accelerate launch --num_processes 8 --multi_gpu --mixed_precision "fp16" \
 - [IP-Adapter for InvokeAI](https://github.com/invoke-ai/InvokeAI) [[release notes](https://github.com/invoke-ai/InvokeAI/releases/tag/v3.2.0)]
 - [IP-Adapter for AnimateDiff prompt travel](https://github.com/s9roll7/animatediff-cli-prompt-travel)
 - [Diffusers_IPAdapter](https://github.com/cubiq/Diffusers_IPAdapter): more features such as supporting multiple input images
+- [Official Diffusers ](https://github.com/huggingface/diffusers/pull/5713)
 
 ## Disclaimer
 
