@@ -319,7 +319,7 @@ def main():
                 "to_v_ip.weight": unet_sd[layer_name + ".to_v.weight"],
             }
             attn_procs[name] = LoRAIPAttnProcessor(hidden_size=hidden_size, cross_attention_dim=cross_attention_dim, rank=lora_rank)
-            attn_procs[name].load_state_dict(weights)
+            attn_procs[name].load_state_dict(weights, strict=False)
     unet.set_attn_processor(attn_procs)
     adapter_modules = torch.nn.ModuleList(unet.attn_processors.values())
     
