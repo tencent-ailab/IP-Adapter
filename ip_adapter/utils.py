@@ -50,10 +50,9 @@ def get_net_attn_map(image_size, batch_size=2, instance_or_negative=False, detac
 
     for name, attn_map in attn_maps.items():
         attn_map = attn_map.cpu() if detach else attn_map
-        attn_map = torch.chunk(attn_map, batch_size)[idx] # (20, 32*32, 77) -> (10, 32*32, 77) # negative & positive CFG
-
-        attn_map = upscale(attn_map, image_size) # (10,32*32,77) -> (77,64*64)
-        net_attn_maps.append(attn_map) # (10,32*32,77) -> (77,64*64)
+        attn_map = torch.chunk(attn_map, batch_size)[idx].squeeze()
+        attn_map = upscale(attn_map, image_size) 
+        net_attn_maps.append(attn_map) 
 
     net_attn_maps = torch.mean(torch.stack(net_attn_maps,dim=0),dim=0)
 
