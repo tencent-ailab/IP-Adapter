@@ -9,6 +9,18 @@ from safetensors import safe_open
 from transformers import CLIPImageProcessor, CLIPVisionModelWithProjection
 
 from .attention_processor_faceid import LoRAAttnProcessor, LoRAIPAttnProcessor
+from .utils import is_torch2_available
+
+USE_DAFAULT_ATTN = False # should be True for visualization_attnmap
+if is_torch2_available() and (not USE_DAFAULT_ATTN):
+    from .attention_processor_faceid import (
+        LoRAAttnProcessor2_0 as LoRAAttnProcessor,
+    )
+    from .attention_processor_faceid import (
+        LoRAIPAttnProcessor2_0 as LoRAIPAttnProcessor,
+    )
+else:
+    from .attention_processor_faceid import LoRAAttnProcessor, LoRAIPAttnProcessor
 from .resampler import PerceiverAttention, FeedForward
 
 
@@ -383,6 +395,71 @@ class IPAdapterFaceIDPlus:
             prompt_embeds=prompt_embeds,
             negative_prompt_embeds=negative_prompt_embeds,
             guidance_scale=guidance_scale,
+            num_inference_steps=num_inference_steps,
+            generator=generator,
+            **kwargs,
+        ).images
+
+        return images
+
+
+class IPAdapterFaceIDXL(IPAdapterFaceID):
+    """SDXL"""
+
+    def generate(
+        self,
+        faceid_embeds=None,
+        prompt=None,
+        negative_prompt=None,
+        scale=1.0,
+        num_samples=4,
+        seed=None,
+        num_inference_steps=30,
+        **kwargs,
+    ):
+        self.set_scale(scale)
+
+        num_prompts = faceid_embeds.size(0)
+
+        if prompt is None:
+            prompt = "best quality, high quality"
+        if negative_prompt is None:
+            negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
+
+        if not isinstance(prompt, List):
+            prompt = [prompt] * num_prompts
+        if not isinstance(negative_prompt, List):
+            negative_prompt = [negative_prompt] * num_prompts
+
+        image_prompt_embeds, uncond_image_prompt_embeds = self.get_image_embeds(faceid_embeds)
+
+        bs_embed, seq_len, _ = image_prompt_embeds.shape
+        image_prompt_embeds = image_prompt_embeds.repeat(1, num_samples, 1)
+        image_prompt_embeds = image_prompt_embeds.view(bs_embed * num_samples, seq_len, -1)
+        uncond_image_prompt_embeds = uncond_image_prompt_embeds.repeat(1, num_samples, 1)
+        uncond_image_prompt_embeds = uncond_image_prompt_embeds.view(bs_embed * num_samples, seq_len, -1)
+
+        with torch.inference_mode():
+            (
+                prompt_embeds,
+                negative_prompt_embeds,
+                pooled_prompt_embeds,
+                negative_pooled_prompt_embeds,
+            ) = self.pipe.encode_prompt(
+                prompt,
+                num_images_per_prompt=num_samples,
+                do_classifier_free_guidance=True,
+                negative_prompt=negative_prompt,
+            )
+            prompt_embeds = torch.cat([prompt_embeds, image_prompt_embeds], dim=1)
+            negative_prompt_embeds = torch.cat([negative_prompt_embeds, uncond_image_prompt_embeds], dim=1)
+
+        generator = torch.Generator(self.device).manual_seed(seed) if seed is not None else None
+        images = self.pipe(
+            prompt_embeds=prompt_embeds,
+            negative_prompt_embeds=negative_prompt_embeds,
+            pooled_prompt_embeds=pooled_prompt_embeds,
+            negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
             num_inference_steps=num_inference_steps,
             generator=generator,
             **kwargs,
