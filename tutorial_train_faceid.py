@@ -288,7 +288,7 @@ def main():
     unet.requires_grad_(False)
     vae.requires_grad_(False)
     text_encoder.requires_grad_(False)
-    image_encoder.requires_grad_(False)
+    #image_encoder.requires_grad_(False)
     
     #ip-adapter
     image_proj_model = MLPProjModel(
