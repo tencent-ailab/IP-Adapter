@@ -214,7 +214,7 @@ class IPAdapterFaceID:
     ):
         self.set_scale(scale)
 
-        
+       
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
@@ -363,7 +363,7 @@ class IPAdapterFaceIDPlus:
     ):
         self.set_scale(scale)
 
-        
+       
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
@@ -540,4 +540,3 @@ class IPAdapterFaceIDPlusXL(IPAdapterFaceIDPlus):
         ).images
 
         return images
-
