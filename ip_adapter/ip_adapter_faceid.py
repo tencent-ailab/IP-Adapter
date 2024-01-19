@@ -212,7 +212,7 @@ class IPAdapterFaceID:
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
-            prompt = "lady in red"
+            prompt = "lady in green"
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
@@ -364,7 +364,7 @@ class IPAdapterFaceIDPlus:
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
-            prompt = "best quality, high quality"
+            prompt = "lady in purple"
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
@@ -424,7 +424,7 @@ class IPAdapterFaceIDXL(IPAdapterFaceID):
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
-            prompt = "best quality, high quality"
+            prompt = "lady in black"
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
