@@ -174,7 +174,7 @@ class IPAdapter:
             num_prompts = clip_image_embeds.size(0)
 
         if prompt is None:
-            prompt = "best quality, high quality"
+            prompt = "lady in green"
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
@@ -235,7 +235,7 @@ class IPAdapterXL(IPAdapter):
         num_prompts = 1 if isinstance(pil_image, Image.Image) else len(pil_image)
 
         if prompt is None:
-            prompt = "best quality, high quality"
+            prompt = "lady in red"
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
@@ -368,7 +368,7 @@ class IPAdapterPlusXL(IPAdapter):
         num_prompts = 1 if isinstance(pil_image, Image.Image) else len(pil_image)
 
         if prompt is None:
-            prompt = "best quality, high quality"
+            prompt = "lady in blue"
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
