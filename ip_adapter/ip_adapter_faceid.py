@@ -367,6 +367,8 @@ class IPAdapterFaceIDPlus:
         if prompt is None:
             if prompt_embeds is None:
                 prompt = "sensual lady in fancy yellow dress"
+            else:
+                prompt_embeds = [prompt_embeds] * num_prompts
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
@@ -391,7 +393,9 @@ class IPAdapterFaceIDPlus:
                 do_classifier_free_guidance=True,
                 negative_prompt=negative_prompt,
             )
-            final_prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
+            if prompt_embeds is None:
+                prompt_embeds = prompt_embeds_
+            final_prompt_embeds = torch.cat([prompt_embeds, image_prompt_embeds], dim=1)
             final_negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
 
         generator = torch.Generator(self.device).manual_seed(seed) if seed is not None else None
