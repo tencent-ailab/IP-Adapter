@@ -411,4 +411,3 @@ class IPAdapterPlusXL(IPAdapter):
         ).images
 
         return images
-
