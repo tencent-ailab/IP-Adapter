@@ -368,7 +368,7 @@ class IPAdapterPlusXL(IPAdapter):
         num_prompts = 1 if isinstance(pil_image, Image.Image) else len(pil_image)
 
         if prompt is None:
-            prompt = "lady in blue"
+            prompt = "lady in yellow"
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
