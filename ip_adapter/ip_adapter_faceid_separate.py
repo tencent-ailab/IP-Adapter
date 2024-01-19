@@ -36,7 +36,7 @@ class FacePerceiverResampler(torch.nn.Module):
         ff_mult=4,
     ):
         super().__init__()
-
+        
         self.proj_in = torch.nn.Linear(embedding_dim, dim)
         self.proj_out = torch.nn.Linear(dim, output_dim)
         self.norm_out = torch.nn.LayerNorm(output_dim)
@@ -63,17 +63,17 @@ class FacePerceiverResampler(torch.nn.Module):
 class MLPProjModel(torch.nn.Module):
     def __init__(self, cross_attention_dim=768, id_embeddings_dim=512, num_tokens=4):
         super().__init__()
-
+        
         self.cross_attention_dim = cross_attention_dim
         self.num_tokens = num_tokens
-
+        
         self.proj = torch.nn.Sequential(
             torch.nn.Linear(id_embeddings_dim, id_embeddings_dim*2),
             torch.nn.GELU(),
             torch.nn.Linear(id_embeddings_dim*2, cross_attention_dim*num_tokens),
         )
         self.norm = torch.nn.LayerNorm(cross_attention_dim)
-
+        
     def forward(self, id_embeds):
         x = self.proj(id_embeds)
         x = x.reshape(-1, self.num_tokens, self.cross_attention_dim)
@@ -84,17 +84,17 @@ class MLPProjModel(torch.nn.Module):
 class ProjPlusModel(torch.nn.Module):
     def __init__(self, cross_attention_dim=768, id_embeddings_dim=512, clip_embeddings_dim=1280, num_tokens=4):
         super().__init__()
-
+        
         self.cross_attention_dim = cross_attention_dim
         self.num_tokens = num_tokens
-
+        
         self.proj = torch.nn.Sequential(
             torch.nn.Linear(id_embeddings_dim, id_embeddings_dim*2),
             torch.nn.GELU(),
             torch.nn.Linear(id_embeddings_dim*2, cross_attention_dim*num_tokens),
         )
         self.norm = torch.nn.LayerNorm(cross_attention_dim)
-
+        
         self.perceiver_resampler = FacePerceiverResampler(
             dim=cross_attention_dim,
             depth=4,
@@ -104,9 +104,9 @@ class ProjPlusModel(torch.nn.Module):
             output_dim=cross_attention_dim,
             ff_mult=4,
         )
-
+        
     def forward(self, id_embeds, clip_embeds, shortcut=False, scale=1.0):
-
+        
         x = self.proj(id_embeds)
         x = x.reshape(-1, self.num_tokens, self.cross_attention_dim)
         x = self.norm(x)
@@ -192,7 +192,7 @@ class IPAdapterFaceID:
             c = image_prompt_embeds.size(-1)
             image_prompt_embeds = image_prompt_embeds.reshape(b, -1, c)
             uncond_image_prompt_embeds = uncond_image_prompt_embeds.reshape(b, -1, c)
-
+        
         return image_prompt_embeds, uncond_image_prompt_embeds
 
     def set_scale(self, scale):
@@ -214,7 +214,7 @@ class IPAdapterFaceID:
     ):
         self.set_scale(scale)
 
-
+        
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
@@ -335,7 +335,7 @@ class IPAdapterFaceIDPlus:
         uncond_clip_image_embeds = self.image_encoder(
             torch.zeros_like(clip_image), output_hidden_states=True
         ).hidden_states[-2]
-
+        
         faceid_embeds = faceid_embeds.to(self.device, dtype=self.torch_dtype)
         image_prompt_embeds = self.image_proj_model(faceid_embeds, clip_image_embeds, shortcut=shortcut, scale=s_scale)
         uncond_image_prompt_embeds = self.image_proj_model(torch.zeros_like(faceid_embeds), uncond_clip_image_embeds, shortcut=shortcut, scale=s_scale)
@@ -363,7 +363,7 @@ class IPAdapterFaceIDPlus:
     ):
         self.set_scale(scale)
 
-
+        
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
