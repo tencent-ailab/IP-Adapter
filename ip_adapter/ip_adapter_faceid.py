@@ -391,13 +391,13 @@ class IPAdapterFaceIDPlus:
                 do_classifier_free_guidance=True,
                 negative_prompt=negative_prompt,
             )
-            prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
-            negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
+            final_prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
+            final_negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
 
         generator = torch.Generator(self.device).manual_seed(seed) if seed is not None else None
         images = self.pipe(
-            prompt_embeds=prompt_embeds,
-            negative_prompt_embeds=negative_prompt_embeds,
+            prompt_embeds=final_prompt_embeds,
+            negative_prompt_embeds=final_negative_prompt_embeds,
             guidance_scale=guidance_scale,
             num_inference_steps=num_inference_steps,
             generator=generator,
