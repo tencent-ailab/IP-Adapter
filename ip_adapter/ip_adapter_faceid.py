@@ -212,7 +212,10 @@ class IPAdapterFaceID:
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
-            prompt = "best quality, high quality"
+            if prompt_embeds is None:
+                prompt = "best quality, high quality"
+        if prompt_embeds:
+                prompt_embeds = [prompt_embeds] * num_prompts
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
@@ -237,6 +240,8 @@ class IPAdapterFaceID:
                 do_classifier_free_guidance=True,
                 negative_prompt=negative_prompt,
             )
+            if prompt_embeds:
+                prompt_embeds_ = prompt_embeds
             prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
 
@@ -419,6 +424,8 @@ class IPAdapterFaceIDXL(IPAdapterFaceID):
         faceid_embeds=None,
         prompt=None,
         negative_prompt=None,
+        prompt_embeds=None,
+        negative_prompt_embeds=None,
         scale=1.0,
         num_samples=4,
         seed=None,
@@ -430,7 +437,10 @@ class IPAdapterFaceIDXL(IPAdapterFaceID):
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
-            prompt = "best quality, high quality"
+            if prompt_embeds is None:
+                prompt = "best quality, high quality"
+        if prompt_embeds:
+                prompt_embeds = [prompt_embeds] * num_prompts
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
@@ -459,6 +469,8 @@ class IPAdapterFaceIDXL(IPAdapterFaceID):
                 do_classifier_free_guidance=True,
                 negative_prompt=negative_prompt,
             )
+            if prompt_embeds:
+                prompt_embeds_ = prompt_embeds
             prompt_embeds = torch.cat([prompt_embeds, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds, uncond_image_prompt_embeds], dim=1)
 
