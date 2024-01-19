@@ -398,7 +398,7 @@ class IPAdapterFaceIDPlus:
                 do_classifier_free_guidance=True,
                 negative_prompt=negative_prompt,
             )
-            if prompt_embeds:
+            if prompt_embeds is not None:
                 prompt_embeds_ = prompt_embeds
             prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
