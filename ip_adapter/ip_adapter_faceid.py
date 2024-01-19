@@ -400,8 +400,9 @@ class IPAdapterFaceIDPlus:
             )
             print(prompt_embeds)
             print(prompt_embeds_)
-            if prompt_embeds is not None:
-                prompt_embeds_ = prompt_embeds
+            #if prompt_embeds is not None:
+            #    prompt_embeds_ = prompt_embeds
+            # try old embeddings
             prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
 
