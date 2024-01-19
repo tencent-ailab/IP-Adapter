@@ -349,6 +349,8 @@ class IPAdapterFaceIDPlus:
         faceid_embeds=None,
         prompt=None,
         negative_prompt=None,
+        prompt_embeds=None,
+        negative_prompt_embeds=None,
         scale=1.0,
         num_samples=4,
         seed=None,
@@ -360,11 +362,11 @@ class IPAdapterFaceIDPlus:
     ):
         self.set_scale(scale)
 
-       
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
-            prompt = "lady in bright yellow"
+            if prompt_embeds is None:
+                prompt = "sensual lady in fancy yellow dress"
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
