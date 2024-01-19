@@ -364,7 +364,7 @@ class IPAdapterFaceIDPlus:
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
-            prompt = "lady in purple"
+            prompt = "lady in bright yellow"
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
