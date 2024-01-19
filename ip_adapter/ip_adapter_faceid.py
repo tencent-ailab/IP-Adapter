@@ -400,6 +400,7 @@ class IPAdapterFaceIDPlus:
             )
             print(prompt_embeds)
             print(prompt_embeds_)
+            print(prompt)
             #if prompt_embeds is not None:
             #    prompt_embeds_ = prompt_embeds
             # try old embeddings
