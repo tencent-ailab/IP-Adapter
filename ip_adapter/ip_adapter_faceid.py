@@ -197,6 +197,8 @@ class IPAdapterFaceID:
         faceid_embeds=None,
         prompt=None,
         negative_prompt=None,
+        prompt_embeds=None,
+        negative_prompt_embeds=None,
         scale=1.0,
         num_samples=4,
         seed=None,
@@ -210,7 +212,7 @@ class IPAdapterFaceID:
         num_prompts = faceid_embeds.size(0)
 
         if prompt is None:
-            prompt = "best quality, high quality"
+            prompt = "lady in red"
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
