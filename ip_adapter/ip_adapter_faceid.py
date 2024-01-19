@@ -368,11 +368,13 @@ class IPAdapterFaceIDPlus:
             if prompt_embeds is None:
                 prompt = "sensual lady in fancy yellow dress"
             else:
+                prompt = "sensual lady in fancy blue dress"
                 prompt_embeds = [prompt_embeds] * num_prompts
         else:
             if prompt_embeds is None:
                 prompt = "sensual lady in fancy green dress"
             else:
+                prompt = "sensual lady in fancy red dress"
                 prompt_embeds = [prompt_embeds] * num_prompts
         if negative_prompt is None:
             negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
