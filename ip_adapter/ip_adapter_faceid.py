@@ -398,8 +398,8 @@ class IPAdapterFaceIDPlus:
                 do_classifier_free_guidance=True,
                 negative_prompt=negative_prompt,
             )
-            print(prompt_embeds).size()
-            print(prompt_embeds_).size()
+            print(prompt_embeds.size())
+            print(prompt_embeds_.size())
             print(prompt)
             #if prompt_embeds is not None:
             #    prompt_embeds_ = prompt_embeds
