@@ -16,6 +16,8 @@ we present IP-Adapter, an effective and lightweight adapter to achieve image pro
 ![arch](assets/figs/fig1.png)
 
 ## Release
+- [2024/01/19] 🔥 Add IP-Adapter-FaceID-Portrait, more information can be found [here](https://huggingface.co/h94/IP-Adapter-FaceID).
+- [2024/01/17] 🔥 Add an experimental version of IP-Adapter-FaceID-PlusV2 for SDXL, more information can be found [here](https://huggingface.co/h94/IP-Adapter-FaceID).
 - [2024/01/04] 🔥 Add an experimental version of IP-Adapter-FaceID for SDXL, more information can be found [here](https://huggingface.co/h94/IP-Adapter-FaceID).
 - [2023/12/29] 🔥 Add an experimental version of IP-Adapter-FaceID-PlusV2, more information can be found [here](https://huggingface.co/h94/IP-Adapter-FaceID).
 - [2023/12/27] 🔥 Add an experimental version of IP-Adapter-FaceID-Plus, more information can be found [here](https://huggingface.co/h94/IP-Adapter-FaceID).
