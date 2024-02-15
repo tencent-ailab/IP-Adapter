@@ -204,7 +204,7 @@ class IPAdapter:
             prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
 
-        generator = get_generator(seed)
+        generator = get_generator(seed, self.device)
 
         images = self.pipe(
             prompt_embeds=prompt_embeds,
@@ -402,7 +402,7 @@ class IPAdapterPlusXL(IPAdapter):
             prompt_embeds = torch.cat([prompt_embeds, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds, uncond_image_prompt_embeds], dim=1)
 
-        generator = get_generator(seed)
+        generator = get_generator(seed, self.device)
 
         images = self.pipe(
             prompt_embeds=prompt_embeds,
