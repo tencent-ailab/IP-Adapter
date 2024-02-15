@@ -79,3 +79,15 @@ def attnmaps2images(net_attn_maps):
     return images
 def is_torch2_available():
     return hasattr(F, "scaled_dot_product_attention")
+
+def get_generator(seed):
+
+    if seed is not None:
+        if isinstance(seed, list):
+            generator = [torch.Generator(self.device).manual_seed(seed_item) for seed_item in seed]
+        else:
+            generator = torch.Generator(self.device).manual_seed(seed)
+    else:
+        generator = None
+
+    return generator
