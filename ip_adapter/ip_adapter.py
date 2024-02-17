@@ -8,7 +8,7 @@ from PIL import Image
 from safetensors import safe_open
 from transformers import CLIPImageProcessor, CLIPVisionModelWithProjection
 
-from .utils import is_torch2_available
+from .utils import is_torch2_available, get_generator
 
 if is_torch2_available():
     from .attention_processor import (
@@ -204,7 +204,8 @@ class IPAdapter:
             prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
 
-        generator = torch.Generator(self.device).manual_seed(seed) if seed is not None else None
+        generator = get_generator(seed, self.device)
+
         images = self.pipe(
             prompt_embeds=prompt_embeds,
             negative_prompt_embeds=negative_prompt_embeds,
@@ -267,7 +268,7 @@ class IPAdapterXL(IPAdapter):
             prompt_embeds = torch.cat([prompt_embeds, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds, uncond_image_prompt_embeds], dim=1)
 
-        self.generator = torch.Generator(self.device).manual_seed(seed) if seed is not None else None
+        self.generator = get_generator(seed, self.device)
         
         images = self.pipe(
             prompt_embeds=prompt_embeds,
@@ -401,7 +402,8 @@ class IPAdapterPlusXL(IPAdapter):
             prompt_embeds = torch.cat([prompt_embeds, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds, uncond_image_prompt_embeds], dim=1)
 
-        generator = torch.Generator(self.device).manual_seed(seed) if seed is not None else None
+        generator = get_generator(seed, self.device)
+
         images = self.pipe(
             prompt_embeds=prompt_embeds,
             negative_prompt_embeds=negative_prompt_embeds,

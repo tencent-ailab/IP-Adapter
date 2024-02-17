@@ -9,7 +9,7 @@ from safetensors import safe_open
 from transformers import CLIPImageProcessor, CLIPVisionModelWithProjection
 
 from .attention_processor_faceid import LoRAAttnProcessor, LoRAIPAttnProcessor
-from .utils import is_torch2_available
+from .utils import is_torch2_available, get_generator
 
 USE_DAFAULT_ATTN = False # should be True for visualization_attnmap
 if is_torch2_available() and (not USE_DAFAULT_ATTN):
@@ -238,7 +238,8 @@ class IPAdapterFaceID:
             prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
 
-        generator = torch.Generator(self.device).manual_seed(seed) if seed is not None else None
+        generator = get_generator(seed, self.device)
+
         images = self.pipe(
             prompt_embeds=prompt_embeds,
             negative_prompt_embeds=negative_prompt_embeds,
@@ -390,7 +391,8 @@ class IPAdapterFaceIDPlus:
             prompt_embeds = torch.cat([prompt_embeds_, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds_, uncond_image_prompt_embeds], dim=1)
 
-        generator = torch.Generator(self.device).manual_seed(seed) if seed is not None else None
+        generator = get_generator(seed, self.device)
+
         images = self.pipe(
             prompt_embeds=prompt_embeds,
             negative_prompt_embeds=negative_prompt_embeds,
@@ -454,7 +456,8 @@ class IPAdapterFaceIDXL(IPAdapterFaceID):
             prompt_embeds = torch.cat([prompt_embeds, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds, uncond_image_prompt_embeds], dim=1)
 
-        generator = torch.Generator(self.device).manual_seed(seed) if seed is not None else None
+        generator = get_generator(seed, self.device)
+
         images = self.pipe(
             prompt_embeds=prompt_embeds,
             negative_prompt_embeds=negative_prompt_embeds,
@@ -523,7 +526,8 @@ class IPAdapterFaceIDPlusXL(IPAdapterFaceIDPlus):
             prompt_embeds = torch.cat([prompt_embeds, image_prompt_embeds], dim=1)
             negative_prompt_embeds = torch.cat([negative_prompt_embeds, uncond_image_prompt_embeds], dim=1)
 
-        generator = torch.Generator(self.device).manual_seed(seed) if seed is not None else None
+        generator = get_generator(seed, self.device)
+
         images = self.pipe(
             prompt_embeds=prompt_embeds,
             negative_prompt_embeds=negative_prompt_embeds,
