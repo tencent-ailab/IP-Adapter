@@ -164,6 +164,7 @@ torch.save({"image_proj": image_proj_sd, "ip_adapter": ip_sd}, "ip_adapter.bin")
 - [IP-Adapter for AnimateDiff prompt travel](https://github.com/s9roll7/animatediff-cli-prompt-travel)
 - [Diffusers_IPAdapter](https://github.com/cubiq/Diffusers_IPAdapter): more features such as supporting multiple input images
 - [Official Diffusers ](https://github.com/huggingface/diffusers/pull/5713)
+- [InstantStyle](https://github.com/InstantStyle/InstantStyle): Style transfer based on IP-Adapter
 
 ## Disclaimer
 
