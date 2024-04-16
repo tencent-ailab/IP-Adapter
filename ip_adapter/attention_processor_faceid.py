@@ -36,6 +36,8 @@ class LoRAAttnProcessor(nn.Module):
         encoder_hidden_states=None,
         attention_mask=None,
         temb=None,
+        *args,
+        **kwargs,
     ):
         residual = hidden_states
 
@@ -130,6 +132,8 @@ class LoRAIPAttnProcessor(nn.Module):
         encoder_hidden_states=None,
         attention_mask=None,
         temb=None,
+        *args,
+        **kwargs,
     ):
         residual = hidden_states
 
@@ -236,6 +240,8 @@ class LoRAAttnProcessor2_0(nn.Module):
         encoder_hidden_states=None,
         attention_mask=None,
         temb=None,
+        *args,
+        **kwargs,
     ):
         residual = hidden_states
 
@@ -335,7 +341,7 @@ class LoRAIPAttnProcessor2_0(nn.Module):
         self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
 
     def __call__(
-        self, attn, hidden_states, encoder_hidden_states=None, attention_mask=None, scale=1.0, temb=None
+        self, attn, hidden_states, encoder_hidden_states=None, attention_mask=None, scale=1.0, temb=None, *args, **kwargs,
     ):
         residual = hidden_states
 
