@@ -5,6 +5,7 @@ import math
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from einops import rearrange
 from einops.layers.torch import Rearrange
 
@@ -68,10 +69,7 @@ class PerceiverAttention(nn.Module):
         v = reshape_tensor(v, self.heads)
 
         # attention
-        scale = 1 / math.sqrt(math.sqrt(self.dim_head))
-        weight = (q * scale) @ (k * scale).transpose(-2, -1)  # More stable with f16 than dividing afterwards
-        weight = torch.softmax(weight.float(), dim=-1).type(weight.dtype)
-        out = weight @ v
+        out = F.scale_dot_product_attention(q, k, v)
 
         out = out.permute(0, 2, 1, 3).reshape(b, l, -1)
 
