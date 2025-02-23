@@ -348,7 +348,7 @@ class IPAdapterFaceIDPlus:
 
     def set_scale(self, scale):
         for attn_processor in self.pipe.unet.attn_processors.values():
-            if isinstance(attn_processor, LoRAIPAttnProcessor):
+            if isinstance(attn_processor, IPAttnProcessor):
                 attn_processor.scale = scale
 
     def generate(
